@@ -23,7 +23,7 @@ npm install webpack-unpack
 
 Pipe a bundle to it:
 
-```bash
+```js
 $ webpack-unpack < bundle.js
 [
 {"id":0,"source":"exports.test=function(t){console.log(t)},exports.boop=\"beep\"","deps":{}}
