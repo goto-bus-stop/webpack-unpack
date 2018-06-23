@@ -118,11 +118,21 @@ function getModuleRange (body) {
 }
 
 var rewriteProps = {
+  s: 'entryModuleId',
+  c: 'cache',
+  m: 'factories',
+  p: 'publicPath',
+  i: 'import',
+  e: 'ensure',
   d: 'defineExport',
-  r: 'markEsModule',
-  n: 'getDefaultExport',
   o: 'hasOwn',
-  p: 'publicPath'
+  r: 'markEsModule',
+  t: 'createNamespaceObject',
+  n: 'getDefaultExport',
+  h: 'hash',
+  w: 'wasmModules',
+  oe: 'onError',
+  nc: 'nonce'
 }
 
 function rewriteMagicIdentifiers (moduleWrapper, source, offset) {
