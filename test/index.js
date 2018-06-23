@@ -60,3 +60,21 @@ test('entry points', function (t) {
     t.ok(/require\(1\)/.test(entry.source))
   })
 })
+
+test('split bundles', function (t) {
+  t.plan(8)
+  buildFixture('split', function (err, bundle, assets) {
+    t.ifError(err)
+    var modules = unpack(bundle)
+    var splitModules = unpack(assets['0.bundle.js'].source())
+    t.ok(modules)
+    t.ok(splitModules)
+    t.equal(modules.length, 1)
+    t.equal(splitModules.length, 1)
+    var entry = modules.filter(function (m) { return m.entry })[0]
+    var splitEntry = splitModules[0]
+    t.ok(/require\.ensure/.test(entry.source))
+    t.ok(/require\.createNamespaceObject/.test(entry.source))
+    t.ok(/console\.log/.test(splitEntry.source))
+  })
+})

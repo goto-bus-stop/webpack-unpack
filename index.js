@@ -24,6 +24,52 @@ module.exports = function unpack (source, opts) {
 
   assert(!source || typeof source === 'string', 'webpack-unpack: source must be a string or Buffer')
 
+  var meta = unpackRuntimePrelude(ast)
+  if (!meta) meta = unpackJsonpPrelude(ast)
+  if (!meta) return
+
+  var entryId = meta.entryId
+  var factories = meta.factories
+
+  if (!factories.every(isFunctionOrEmpty)) {
+    return
+  }
+
+  var modules = []
+  for (var i = 0; i < factories.length; i++) {
+    var factory = factories[i]
+    if (factory === null) continue
+
+    scan.crawl(factory)
+    // If source is available, rewrite the require,exports,module var names in place
+    // Else, generate a string afterwards.
+    var range = getModuleRange(factory.body)
+    var moduleSource = rewriteMagicIdentifiers(
+      factory,
+      source ? source.slice(range.start, range.end) : null,
+      range.start
+    )
+    if (!moduleSource) {
+      moduleSource = astring.generate({
+        type: 'Program',
+        body: factory.body.body
+      })
+    }
+
+    var deps = getDependencies(factory)
+
+    modules.push({
+      id: i,
+      source: moduleSource,
+      deps: deps,
+      entry: i === entryId
+    })
+  }
+
+  return modules
+}
+
+function unpackRuntimePrelude (ast) {
   // !(prelude)(factories)
   if (ast.body[0].type !== 'ExpressionStatement' ||
       ast.body[0].expression.type !== 'UnaryExpression' ||
@@ -64,42 +110,39 @@ module.exports = function unpack (source, opts) {
     return
   }
   var factories = outer.arguments[0].elements
-  if (!factories.every(isFunctionOrEmpty)) {
+
+  return {
+    factories: factories,
+    entryId: entryId
+  }
+}
+
+function unpackJsonpPrelude (ast) {
+  // (prelude).push(factories)
+  if (ast.body[0].type !== 'ExpressionStatement' ||
+      ast.body[0].expression.type !== 'CallExpression' ||
+      ast.body[0].expression.callee.type !== 'MemberExpression') {
     return
   }
 
-  var modules = []
-  for (var i = 0; i < factories.length; i++) {
-    var factory = factories[i]
-    if (factory === null) return
+  var callee = ast.body[0].expression.callee
+  // (webpackJsonp = webpackJsonp || []).push
+  if (callee.computed || callee.property.name !== 'push') return
+  if (callee.object.type !== 'AssignmentExpression') return
 
-    scan.crawl(factory)
-    // If source is available, rewrite the require,exports,module var names in place
-    // Else, generate a string afterwards.
-    var range = getModuleRange(factory.body)
-    var moduleSource = rewriteMagicIdentifiers(
-      factory,
-      source ? source.slice(range.start, range.end) : null,
-      range.start
-    )
-    if (!moduleSource) {
-      moduleSource = astring.generate({
-        type: 'Program',
-        body: factory.body.body
-      })
-    }
+  var args = ast.body[0].expression.arguments
+  // ([ [bundleIds], [factories])
+  if (args.length !== 1) return
+  if (args[0].type !== 'ArrayExpression') return
+  if (args[0].elements[0].type !== 'ArrayExpression') return
+  if (args[0].elements[1].type !== 'ArrayExpression') return
 
-    var deps = getDependencies(factory)
+  var factories = args[0].elements[1].elements
 
-    modules.push({
-      id: i,
-      source: moduleSource,
-      deps: deps,
-      entry: i === entryId
-    })
+  return {
+    factories: factories,
+    entryId: undefined
   }
-
-  return modules
 }
 
 function isFunctionOrEmpty (node) {
