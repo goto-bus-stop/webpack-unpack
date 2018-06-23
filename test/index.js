@@ -39,3 +39,16 @@ test('provide only an ast', function (t) {
     t.ok(/^\(?exports\.test = /.test(modules[0].source))
   })
 })
+
+test('es modules', function (t) {
+  t.plan(6)
+  buildFixture('esmodules', function (err, bundle) {
+    t.ifError(err)
+    var modules = unpack(bundle)
+    t.ok(modules)
+    t.equal(modules.length, 3) // just 3 because of ModuleConcatenation
+    t.ok(/whatever/.test(modules[1].source))
+    t.ok(/require\.markEsModule/.test(modules[1].source))
+    t.ok(/require\.getDefaultExport/.test(modules[1].source))
+  })
+})

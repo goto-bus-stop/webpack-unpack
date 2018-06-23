@@ -94,6 +94,14 @@ function getModuleRange (body) {
   }
 }
 
+var rewriteProps = {
+  d: 'defineExport',
+  r: 'markEsModule',
+  n: 'getDefaultExport',
+  o: 'hasOwn',
+  p: 'publicPath'
+}
+
 function rewriteMagicIdentifiers (moduleWrapper, source, offset) {
   var magicBindings = moduleWrapper.params.map(scan.getBinding)
   var magicNames = ['module', 'exports', 'require']
@@ -106,6 +114,13 @@ function rewriteMagicIdentifiers (moduleWrapper, source, offset) {
 
       ref.name = name
       if (edit) edit.splice(ref.start - offset, ref.end - offset, name)
+
+      if (name === 'require' && ref.parent.type === 'MemberExpression') {
+        var prop = ref.parent.property
+        if (!rewriteProps[prop.name]) return
+        prop.name = rewriteProps[prop.name]
+        if (edit) edit.splice(prop.start - offset, prop.end - offset, prop.name)
+      }
     })
   })
 
