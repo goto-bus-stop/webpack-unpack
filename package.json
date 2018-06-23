@@ -37,5 +37,10 @@
   },
   "scripts": {
     "test": "standard && node test | tap-spec"
+  },
+  "standard": {
+    "ignore": [
+      "test/fixtures"
+    ]
   }
 }

@@ -2,17 +2,12 @@ var test = require('tape')
 var unpack = require('../')
 var webpack = require('webpack')
 var path = require('path')
-var fs = require('fs')
 
 function buildFixture (name, cb) {
   var config = path.join(__dirname, 'fixtures', name, 'webpack.config.js')
-  var bundle = path.join(__dirname, 'fixtures', name, 'out/bundle.js')
   webpack(require(config)).run(function (err, stats) {
     if (err) return cb(err)
-    fs.readFile(bundle, 'utf8', function (err, contents) {
-      if (err) return cb(err)
-      cb(null, contents)
-    })
+    cb(null, stats.compilation.assets['bundle.js'].source(), stats.compilation.assets)
   })
 }
 
