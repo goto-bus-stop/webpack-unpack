@@ -52,3 +52,16 @@ test('es modules', function (t) {
     t.ok(/require\.getDefaultExport/.test(modules[1].source))
   })
 })
+
+test('entry points', function (t) {
+  t.plan(5)
+  buildFixture('entrypoints', function (err, bundle) {
+    t.ifError(err)
+    var modules = unpack(bundle)
+    t.ok(modules)
+    t.equal(modules.length, 3) // created a multi entry point proxy module
+    var entry = modules.filter(function (m) { return m.entry })[0]
+    t.ok(/require\(0\)/.test(entry.source))
+    t.ok(/require\(1\)/.test(entry.source))
+  })
+})

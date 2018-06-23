@@ -36,6 +36,21 @@ module.exports = function unpack (source, opts) {
   if (outer.callee.type !== 'FunctionExpression' || outer.callee.params.length !== 1) {
     return
   }
+  var prelude = outer.callee.body
+
+  // Find the entry point require call.
+  var entryNode = find(prelude.body.slice().reverse(), function (node) {
+    if (node.type !== 'ExpressionStatement' || node.expression.type !== 'SequenceExpression') return false
+    var exprs = node.expression.expressions
+    return exprs[exprs.length - 1].type === 'CallExpression' &&
+      exprs[exprs.length - 1].arguments.length === 1 &&
+      exprs[exprs.length - 1].arguments[0].type === 'AssignmentExpression'
+  })
+  if (entryNode) {
+    var exprs = entryNode.expression.expressions
+    entryNode = exprs[exprs.length - 1].arguments[0].right
+  }
+  var entryId = entryNode ? entryNode.value : null
 
   // factories = [function(){}]
   if (outer.arguments.length !== 1 || outer.arguments[0].type !== 'ArrayExpression') {
@@ -72,7 +87,8 @@ module.exports = function unpack (source, opts) {
     modules.push({
       id: i,
       source: moduleSource,
-      deps: deps
+      deps: deps,
+      entry: i === entryId
     })
   }
 
@@ -139,4 +155,10 @@ function getDependencies (moduleWrapper) {
   })
 
   return deps
+}
+
+function find (arr, fn) {
+  for (var i = 0; i < arr.length; i++) {
+    if (fn(arr[i])) return arr[i]
+  }
 }
