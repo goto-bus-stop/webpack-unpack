@@ -40,15 +40,22 @@ module.exports = function unpack (source, opts) {
 
   // Find the entry point require call.
   var entryNode = find(prelude.body.slice().reverse(), function (node) {
-    if (node.type !== 'ExpressionStatement' || node.expression.type !== 'SequenceExpression') return false
-    var exprs = node.expression.expressions
-    return exprs[exprs.length - 1].type === 'CallExpression' &&
-      exprs[exprs.length - 1].arguments.length === 1 &&
-      exprs[exprs.length - 1].arguments[0].type === 'AssignmentExpression'
+    if (node.type !== 'ExpressionStatement') return false
+    node = node.expression
+    if (node.type === 'SequenceExpression') {
+      var exprs = node.expressions
+      node = exprs[exprs.length - 1]
+    }
+    return node.type === 'CallExpression' &&
+      node.arguments.length === 1 &&
+      node.arguments[0].type === 'AssignmentExpression'
   })
   if (entryNode) {
-    var exprs = entryNode.expression.expressions
-    entryNode = exprs[exprs.length - 1].arguments[0].right
+    entryNode = entryNode.expression
+    if (entryNode.type === 'SequenceExpression') {
+      entryNode = entryNode.expressions[entryNode.expressions.length - 1]
+    }
+    entryNode = entryNode.arguments[0].right
   }
   var entryId = entryNode ? entryNode.value : null
 
