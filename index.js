@@ -38,31 +38,31 @@ module.exports = function unpack (source, opts) {
   var modules = []
   for (var i = 0; i < factories.length; i++) {
     var factory = factories[i]
-    if (factory === null) continue
+    if (factory.factory === null) continue
 
-    scan.crawl(factory)
+    scan.crawl(factory.factory)
     // If source is available, rewrite the require,exports,module var names in place
     // Else, generate a string afterwards.
-    var range = getModuleRange(factory.body)
+    var range = getModuleRange(factory.factory.body)
     var moduleSource = rewriteMagicIdentifiers(
-      factory,
+      factory.factory,
       source ? source.slice(range.start, range.end) : null,
       range.start
     )
     if (!moduleSource) {
       moduleSource = astring.generate({
         type: 'Program',
-        body: factory.body.body
+        body: factory.factory.body.body
       })
     }
 
-    var deps = getDependencies(factory)
+    var deps = getDependencies(factory.factory)
 
     modules.push({
-      id: i,
+      id: factory.index,
       source: moduleSource,
       deps: deps,
-      entry: i === entryId
+      entry: factory.index === entryId
     })
   }
 
@@ -106,10 +106,11 @@ function unpackRuntimePrelude (ast) {
   var entryId = entryNode ? entryNode.value : null
 
   // factories = [function(){}]
-  if (outer.arguments.length !== 1 || outer.arguments[0].type !== 'ArrayExpression') {
+  if (outer.arguments.length !== 1 ||
+      (outer.arguments[0].type !== 'ArrayExpression' && outer.arguments[0].type !== 'ObjectExpression')) {
     return
   }
-  var factories = outer.arguments[0].elements
+  var factories = getFactories(outer.arguments[0])
 
   return {
     factories: factories,
@@ -135,9 +136,9 @@ function unpackJsonpPrelude (ast) {
   if (args.length !== 1) return
   if (args[0].type !== 'ArrayExpression') return
   if (args[0].elements[0].type !== 'ArrayExpression') return
-  if (args[0].elements[1].type !== 'ArrayExpression') return
+  if (args[0].elements[1].type !== 'ArrayExpression' && args[0].elements[1].type !== 'ObjectExpression') return
 
-  var factories = args[0].elements[1].elements
+  var factories = getFactories(args[0].elements[1])
 
   return {
     factories: factories,
@@ -146,7 +147,7 @@ function unpackJsonpPrelude (ast) {
 }
 
 function isFunctionOrEmpty (node) {
-  return node === null || node.type === 'FunctionExpression'
+  return node.factory === null || node.factory.type === 'FunctionExpression'
 }
 
 function getModuleRange (body) {
@@ -221,4 +222,18 @@ function find (arr, fn) {
   for (var i = 0; i < arr.length; i++) {
     if (fn(arr[i])) return arr[i]
   }
+}
+
+function getFactories (node) {
+  if (node.type === 'ArrayExpression') {
+    return node.elements.map(function (factory, index) {
+      return { factory: factory, index: index }
+    })
+  }
+  if (node.type === 'ObjectExpression') {
+    return node.properties.map(function (prop) {
+      return { factory: prop.value, index: prop.key.value }
+    })
+  }
+  return []
 }
