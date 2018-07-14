@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.0.0
+* Remove rewriting of `require.*` properties.
+
 ## 1.1.2
 * Support ObjectExpressions due to large ID gaps in bundles.
 
