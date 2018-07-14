@@ -43,8 +43,8 @@ test('es modules', function (t) {
     t.ok(modules)
     t.equal(modules.length, 3) // just 3 because of ModuleConcatenation
     t.ok(/whatever/.test(modules[1].source))
-    t.ok(/require\.markEsModule/.test(modules[1].source))
-    t.ok(/require\.getDefaultExport/.test(modules[1].source))
+    t.ok(/require\.r/.test(modules[1].source))
+    t.ok(/require\.n/.test(modules[1].source))
   })
 })
 
@@ -73,8 +73,8 @@ test('split bundles', function (t) {
     t.equal(splitModules.length, 1)
     var entry = modules.filter(function (m) { return m.entry })[0]
     var splitEntry = splitModules[0]
-    t.ok(/require\.ensure/.test(entry.source))
-    t.ok(/require\.createNamespaceObject/.test(entry.source))
+    t.ok(/require\.e/.test(entry.source))
+    t.ok(/require\.t/.test(entry.source))
     t.ok(/console\.log/.test(splitEntry.source))
   })
 })
