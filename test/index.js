@@ -18,7 +18,7 @@ test('commonjs modules', function (t) {
     var modules = unpack(bundle)
     t.ok(modules)
     t.equal(modules.length, 4)
-    t.ok(/^exports\.test=/.test(modules[0].source))
+    t.ok(/^exports\.test=/.test(modules[3].source))
   })
 })
 
@@ -31,7 +31,7 @@ test('provide only an ast', function (t) {
     t.ok(modules)
     t.equal(modules.length, 4)
     // with a ( because it's a sequenceexpression
-    t.ok(/^\(?exports\.test = /.test(modules[0].source))
+    t.ok(/^\(?exports\.test = /.test(modules[3].source))
   })
 })
 
@@ -42,9 +42,9 @@ test('es modules', function (t) {
     var modules = unpack(bundle)
     t.ok(modules)
     t.equal(modules.length, 3) // just 3 because of ModuleConcatenation
-    t.ok(/whatever/.test(modules[1].source))
-    t.ok(/require\.r/.test(modules[1].source))
-    t.ok(/require\.n/.test(modules[1].source))
+    t.ok(/whatever/.test(modules[2].source))
+    t.ok(/require\.r/.test(modules[2].source))
+    t.ok(/require\.n/.test(modules[2].source))
   })
 })
 
@@ -56,8 +56,8 @@ test('entry points', function (t) {
     t.ok(modules)
     t.equal(modules.length, 3) // created a multi entry point proxy module
     var entry = modules.filter(function (m) { return m.entry })[0]
-    t.ok(/require\(0\)/.test(entry.source))
     t.ok(/require\(1\)/.test(entry.source))
+    t.ok(/require\(2\)/.test(entry.source))
   })
 })
 
@@ -66,7 +66,7 @@ test('split bundles', function (t) {
   buildFixture('split', function (err, bundle, assets) {
     t.ifError(err)
     var modules = unpack(bundle)
-    var splitModules = unpack(assets['0.bundle.js'].source())
+    var splitModules = unpack(assets['1.bundle.js'].source())
     t.ok(modules)
     t.ok(splitModules)
     t.equal(modules.length, 1)
