@@ -207,7 +207,13 @@ function getFactories (node) {
   }
   if (node.type === 'ObjectExpression') {
     return node.properties.map(function (prop) {
-      return { factory: prop.value, index: prop.key.value }
+      var index
+      if (prop.key.type === 'Literal') {
+        index = prop.key.value
+      } else if (prop.key.type === 'Identifier') {
+        index = prop.key.name
+      }
+      return { factory: prop.value, index: index }
     })
   }
   return []
