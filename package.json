@@ -7,7 +7,7 @@
     "url": "https://github.com/goto-bus-stop/webpack-unpack/issues"
   },
   "dependencies": {
-    "acorn": "^7.1.1",
+    "acorn": "^8.0.1",
     "astring": "^1.4.0",
     "minimist": "^1.2.0",
     "multisplice": "^1.0.0",
