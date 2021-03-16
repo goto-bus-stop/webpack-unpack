@@ -18,7 +18,7 @@
     "standard": "^14.3.1",
     "tap-spec": "^5.0.0",
     "tape": "^5.0.0",
-    "webpack": "^4.35.3"
+    "webpack": "^5.26.0"
   },
   "homepage": "https://github.com/goto-bus-stop/webpack-unpack",
   "keywords": [
